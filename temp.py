@@ -1,3 +1,3 @@
-tempList=[2,5,8,9,6,3]
-le1=len(tempList)
-print(tempList,le1)
+tempList=[2,5,8,"test",9,6,3]
+for item in tempList:
+    print(item)
