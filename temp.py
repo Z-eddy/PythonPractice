@@ -1,2 +1,2 @@
 li=list(range(0,13,2))
-print(li)
+print(min(li),max(li),sum(li))
