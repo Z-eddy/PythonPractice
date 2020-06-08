@@ -1,3 +1,2 @@
-num=12.53
-message="age:"+str(12.53)
-print(message)
+tempList=["test1","test2",1,2,3,"test3"]
+print(tempList[-2])
