@@ -1,5 +1,2 @@
-for i in range(0,10):
-    print(i)
-
-ran=range(0,5)
-print(ran)
+li=list(range(0,13,2))
+print(li)
