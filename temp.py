@@ -1,3 +1,7 @@
 li=["ab","bc","cd"]
 s="bcd"
-print(s not in li)
+li.clear()
+if li:
+    print(s not in li)
+else:
+    print("none")
