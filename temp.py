@@ -1,2 +1,2 @@
-li=list(range(0,13,2))
-print(min(li),max(li),sum(li))
+li=[item*2+1 for item in range(0,10)]
+print(li)
