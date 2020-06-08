@@ -1,5 +1,13 @@
-keyValue={"key":"theKey","val0":123,"val1":123}
-keyValue["add"]=12.59
+li = []
+for i in range(2, 10):
+    print(i)
+    tempItem = {"n0": i+10, "n1": i+11}
+    li.append(tempItem)
 
-for key in set(keyValue.values()):    #默认只访问键名
-    print(key)
+print(li)
+
+for item in li[:3]:
+    item["no"]=88
+    item["n1"]=99
+
+print(li)
