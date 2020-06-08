@@ -1,5 +1,8 @@
-message="hello 'world'\t"
-tempTitle=message.title()   #首字母大写
-tempUpper=message.upper()   #全部大写
-tempLower=message.lower()   #全部小写
-print(message,tempTitle,tempUpper,tempLower)
+message="     hello 'world'\t      "
+#生成临时亮而非更改自身
+tempDelRightMes=message.rstrip()#去掉右边空白
+tempDelLeftMes=message.lstrip()#去掉左边空白
+tempDelWhiteMes=message.strip()#去掉两边空白
+print(tempDelRightMes)
+print(tempDelLeftMes)
+print(tempDelWhiteMes)
