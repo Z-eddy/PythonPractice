@@ -1,7 +1,2 @@
-li=["ab","bc","cd"]
-s="bcd"
-li.clear()
-if li:
-    print(s not in li)
-else:
-    print("none")
+keyValue={"key":"theKey","val0":123,"val1":"the456"}
+print(keyValue["key"])
