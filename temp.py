@@ -1,1 +1,3 @@
-print(5>3 and 1>2 or 3>2)
+li=["ab","bc","cd"]
+s="bcd"
+print(s in li)
