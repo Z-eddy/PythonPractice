@@ -1,5 +1,5 @@
 keyValue={"key":"theKey","val0":123,"val1":"the456"}
 keyValue["add"]=12.59
 
-for key in keyValue.keys(): #.values()
+for key in keyValue:    #默认只访问键名
     print(key)
