@@ -1,7 +1,6 @@
-li = []
-i = 0
-while len(li) < 5:
-   i += 1
-   li.append(i)
+rowLi=["aa","bb","cc"]
+li=[]
+while rowLi :
+    li.append(rowLi.pop())
 
 print(li)
