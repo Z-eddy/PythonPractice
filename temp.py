@@ -1,6 +1,2 @@
-rowLi=["aa","bb","cc"]
-li=[]
-while rowLi :
-    li.append(rowLi.pop())
-
-print(li)
+rowLi=["aa","bb","aa","cc"]
+print(rowLi.count("aa"))
