@@ -1,4 +1,2 @@
-li=[]
-mes = input("输入:")
-li.append(mes)
-print(li)
+num = int("12")
+print(num)
