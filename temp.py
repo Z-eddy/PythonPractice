@@ -1,6 +1,7 @@
-def foo(val=88):
-    """foo函数定义"""   #文档字符串注释
-    return ("hello "+str(val)).title()
+def listDeal(li):
+    for key,val in li.items():
+        print(key,val)
 
-ms=foo(99)
-print(ms)
+liTest={"nameA":123,"nameB":"字符串名字"}
+
+listDeal(liTest)
