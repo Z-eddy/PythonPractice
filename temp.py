@@ -1,2 +1,7 @@
-num = int("12")
-print(num)
+li = []
+i = 0
+while len(li) < 5:
+   i += 1
+   li.append(i)
+
+print(li)
