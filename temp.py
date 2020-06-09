@@ -1,5 +1,3 @@
-def dealTuple(numA,numB,**theMap):
-    print(numA,numB,theMap)
+import theModule
 
-
-dealTuple("test", 123, nameA=["aa", 1.86, 'bb'], nameB=123115)
+theModule.dealTuple("test", 123, nameA=["aa", 1.86, 'bb'], nameB=123115)
