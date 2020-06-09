@@ -1,6 +1,5 @@
-rowLi=["aa","bb","aa","cc"]
-ele="aa"
-while ele in rowLi:
-    rowLi.remove(ele)
+def foo(val):
+    """foo函数定义"""   #文档字符串注释
+    print("hello "+str(val))
 
-print(rowLi)
+foo(input("输入个值"))
