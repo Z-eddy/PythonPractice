@@ -1,2 +1,6 @@
 rowLi=["aa","bb","aa","cc"]
-print(rowLi.count("aa"))
+ele="aa"
+while ele in rowLi:
+    rowLi.remove(ele)
+
+print(rowLi)
