@@ -1,3 +1,3 @@
-from theModule import dealTuple
+from theModule import dealTuple as foo
 
-dealTuple("test", 123, nameA=["aa", 1.86, 'bb'], nameB=123115)
+foo("test", 123, nameA=["aa", 1.86, 'bb'], nameB=123115)
