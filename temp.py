@@ -1,5 +1,6 @@
-def foo(val):
+def foo(val=88):
     """foo函数定义"""   #文档字符串注释
-    print("hello "+str(val))
+    return ("hello "+str(val)).title()
 
-foo(input("输入个值"))
+ms=foo(99)
+print(ms)
