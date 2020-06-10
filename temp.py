@@ -1,8 +1,18 @@
-from inheritTemp import SpottyDog as Pet
+normalDict={}
+normalDict["cda"]="theC"
+normalDict["abd"]="theA"
+normalDict["b"]="theB"
+normalDict["num"]=17.8
+# print(normalDict)
+for key,val in normalDict.items():
+    print(key,val)
 
-myPet=Pet("nameA",2,88)
-print(myPet.readAge())
-myPet.setAge(12)
-print(myPet.readAge())
-print(myPet.spottyN())
-print(myPet.privateTest)
+from collections import OrderedDict
+ordDict=OrderedDict()
+ordDict["cda"]="theC"
+ordDict["abd"]="theA"
+ordDict["b"]="theB"
+ordDict["num"]=17.8
+# print(ordDict)
+for key,val in ordDict.items():
+    print(key,val)
