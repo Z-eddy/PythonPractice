@@ -8,3 +8,9 @@ class Dog():
 
     def petAge(self):
         print("the age is:"+str(self.age_))
+    
+    def setAge(self,age):
+        self.age_=age
+
+    def readAge(self):
+        return self.age_
