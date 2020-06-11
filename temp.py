@@ -1,9 +1,10 @@
-from theModule import getFormattedName
 import unittest
+from theModule import Dog
 
-class nameTest(unittest.TestCase):  #通过继承TestCase
-    def testFirstLastName(self):    #只有以test开头才会运行
-        name=getFormattedName("jian","que")
-        self.assertEqual(name,"ian Que")
+class TestDog(unittest.TestCase):
+    def testName(self):
+        myPet=Dog("nameA",2)
+        li=["nameB","nameA"]
+        self.assertIn(myPet.getName(),li)
 
 unittest.main()
