@@ -1,10 +1,9 @@
-import json
+from theModule import getFormattedName
+import unittest
 
-dataNum=[3,2,1,4,6,3]
-fileName="testJson.json"
-with open(fileName,"w") as jsObj:
-    json.dump(dataNum,jsObj)
+class nameTest(unittest.TestCase):  #通过继承TestCase
+    def testFirstLastName(self):
+        name=getFormattedName("jian","que")
+        self.assertEqual(name,"Jian Que")
 
-with open(fileName,"r") as jsObj:
-    data=json.load(jsObj)
-    print(data)
+unittest.main()
