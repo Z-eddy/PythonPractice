@@ -1,6 +1,10 @@
-a=set("abcde")
-b=set("cdefg")
-print(a-b)#差集,a有b没有
-print(a|b)#并集
-print(a&b)#交集
-print(a^b)#特有值集合
+import json
+
+dataNum=[3,2,1,4,6,3]
+fileName="testJson.json"
+with open(fileName,"w") as jsObj:
+    json.dump(dataNum,jsObj)
+
+with open(fileName,"r") as jsObj:
+    data=json.load(jsObj)
+    print(data)
