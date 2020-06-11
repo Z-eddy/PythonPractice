@@ -1,15 +1,9 @@
-li=["aa","b","cc","dd"]
-tynyLi=["ee","f"]
-print(li[1])
-print(li[0:2])
-print(li[1:])
-print(tynyLi*3)
-print(li+tynyLi)
+def reverString(s):
+    words=s.split(" ")#按照空格分离word
+    words=words[-1::-1]
+    outSentence=" "#也可以和下面直接合并
+    outSentence = outSentence.join(words)
+    return outSentence
 
-"""
-b
-['aa', 'b']
-['b', 'cc', 'dd']
-['ee', 'f', 'ee', 'f', 'ee', 'f']
-['aa', 'b', 'cc', 'dd', 'ee', 'f']
-"""
+s="i like the world"
+print(reverString(s))
