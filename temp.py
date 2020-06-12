@@ -1,5 +1,5 @@
-from theModule import getFormattedName
 import unittest
+from theModule import Dog
 
 class nameTest(unittest.TestCase):  #通过继承TestCase
     def testFirstLastName(self):    #只有以test开头才会运行
