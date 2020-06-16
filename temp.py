@@ -1,2 +1,6 @@
-message = "beefghabcaseixoefbgef"
-print(message.strip("beg")) #删除"beg"中的任意出现在首位的字符
+import re
+rule=re.compile("^[a-z]*.*\d{3}")
+message="i have the13456 num 789012abc"
+result=rule.search(message)
+if(result):
+    print(result.group())
