@@ -1,6 +1,7 @@
 # This Python file uses the following encoding: utf-8
 import sys
 import os
+import subModel.SubModel as m
 
 
 from PySide2.QtWidgets import QApplication, QWidget
@@ -12,6 +13,7 @@ class MainUI(QWidget):
     def __init__(self):
         super(MainUI, self).__init__()
         self.load_ui()
+
 
     def load_ui(self):
         loader = QUiLoader()
@@ -30,4 +32,8 @@ if __name__ == "__main__":
     app = QApplication([])
     widget = MainUI()
     widget.show()
+    subWid=m.SubModel(widget)
+    # subWid.setWindowTitle("subModel")
+    subWid.show()
+    # m.foo()
     sys.exit(app.exec_())
