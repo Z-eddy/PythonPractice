@@ -1,2 +1,0 @@
-发布方式：
-pyinstaller -F -c main.py --hidden-import PySide2.QtXml
