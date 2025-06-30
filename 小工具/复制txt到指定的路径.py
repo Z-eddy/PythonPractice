@@ -8,6 +8,8 @@ class SearchCopyFile(object):
         self._purposePath = purposePath
         self.absOrigiPath = os.path.abspath(self._origiPath)
         self.absPurposePath = os.path.abspath(self._purposePath)
+        # 创建输出目录（如果不存在）
+        os.makedirs(purposePath, exist_ok=True)
 
     # 查找txt
     def findFiles(self):
