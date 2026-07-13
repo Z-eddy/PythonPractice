@@ -29,7 +29,7 @@ import numpy as np
 
 # 直接导入 buff_monitor 的模块
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from buff_monitor import TemplateMatcher, CONFIDENCE_THRESHOLD, TEMPLATE_PATH
+from buff_monitor import TemplateMatcher, CONFIDENCE_THRESHOLD, TEMPLATE_PATH, imread, imwrite
 
 
 # ================================================================
@@ -58,7 +58,7 @@ def check_single_image(
         print(f'  [SKIP] 文件不存在: {image_path}')
         return False
 
-    img = cv2.imread(str(path))
+    img = imread(str(path))
     if img is None or img.size == 0:
         print(f'  [ERR]  无法读取: {image_path}')
         return False
@@ -90,7 +90,7 @@ def check_single_image(
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
         out_path = path.parent / f'{path.stem}_marked{path.suffix}'
-        cv2.imwrite(str(out_path), marked)
+        imwrite(str(out_path), marked)
         print(f'         -> 已保存标注: {out_path.name}')
 
     # 弹出窗口显示

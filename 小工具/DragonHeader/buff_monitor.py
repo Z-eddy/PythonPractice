@@ -29,7 +29,9 @@ import win32api
 import win32con
 import win32ui
 import ctypes
-from mss import mss
+import subprocess
+from mss import MSS
+from mss.exception import ScreenShotError
 
 # ================================================================
 # Configuration
@@ -71,6 +73,31 @@ log = logging.getLogger('DragonHeader')
 
 
 # ================================================================
+# OpenCV Unicode path helpers （cv2.imread/imwrite 不支持中文路径）
+# ================================================================
+
+def imread(path: str, flags: int = cv2.IMREAD_COLOR) -> np.ndarray | None:
+    """cv2.imread with Unicode path support (Windows)"""
+    try:
+        data = np.fromfile(path, dtype=np.uint8)
+        if len(data) == 0:
+            return None
+        return cv2.imdecode(data, flags)
+    except Exception:
+        return None
+
+
+def imwrite(path: str, img: np.ndarray) -> bool:
+    """cv2.imwrite with Unicode path support (Windows)"""
+    ext = Path(path).suffix or '.png'
+    success, buf = cv2.imencode(ext, img)
+    if success:
+        buf.tofile(path)
+        return True
+    return False
+
+
+# ================================================================
 # Layer 1: TemplateMatcher — 纯图像处理，零依赖 Win32
 # ================================================================
 
@@ -88,7 +115,7 @@ class TemplateMatcher:
     """
 
     def __init__(self, template_path: str, confidence: float = CONFIDENCE_THRESHOLD):
-        self.template = cv2.imread(template_path, cv2.IMREAD_COLOR)
+        self.template = imread(template_path, cv2.IMREAD_COLOR)
         if self.template is None or self.template.size == 0:
             raise ValueError(f"无法加载模板图片: {template_path}")
 
@@ -196,7 +223,7 @@ class WindowCapture:
     """
 
     def __init__(self):
-        self.sct = mss()
+        self.sct = MSS()
 
     # ----------------------------------------------------------
     # 窗口枚举
@@ -306,10 +333,14 @@ class WindowCapture:
         except Exception as e:
             log.debug(f"BringToForeground 失败 hwnd={hwnd}: {e}")
 
-    def capture_screen_region(self, region: dict) -> np.ndarray:
-        """屏幕截图（回退用）"""
-        screenshot = self.sct.grab(region)
-        return cv2.cvtColor(np.array(screenshot), cv2.COLOR_BGRA2BGR)
+    def capture_screen_region(self, region: dict) -> np.ndarray | None:
+        """屏幕截图（回退用，失败返回 None）"""
+        try:
+            screenshot = self.sct.grab(region)
+            return cv2.cvtColor(np.array(screenshot), cv2.COLOR_BGRA2BGR)
+        except ScreenShotError as e:
+            log.debug(f"屏幕截图失败: {e}")
+            return None
 
     # ----------------------------------------------------------
     # 统一捕获接口
@@ -358,7 +389,10 @@ class ProcessManager:
 
     @staticmethod
     def kill(pid: int) -> bool:
-        """终止进程（terminate → kill 递进）"""
+        """终止进程（terminate → kill → taskkill 递进）"""
+        proc_name = f"PID={pid}"
+
+        # --- Step 1: psutil terminate ---
         try:
             proc = psutil.Process(pid)
             proc_name = proc.name()
@@ -381,8 +415,30 @@ class ProcessManager:
             except Exception as e:
                 log.error(f"强制关闭失败 (PID={pid}): {e}")
                 return False
+        except psutil.AccessDenied:
+            # psutil 没有权限 — 回退到 taskkill
+            pass
         except Exception as e:
             log.error(f"关闭进程 (PID={pid}) 失败: {e}")
+            return False
+
+        # --- Step 2: taskkill /F (Windows 权限提升回退) ---
+        try:
+            result = subprocess.run(
+                ['taskkill', '/F', '/PID', str(pid)],
+                capture_output=True, text=True, timeout=10,
+            )
+            if result.returncode == 0:
+                log.info(f"已通过 taskkill 关闭 {proc_name} (PID={pid})")
+                return True
+            else:
+                log.error(f"taskkill 失败 (PID={pid}): {result.stderr.strip()}")
+                return False
+        except subprocess.TimeoutExpired:
+            log.error(f"taskkill 超时 (PID={pid})")
+            return False
+        except Exception as e:
+            log.error(f"taskkill 异常 (PID={pid}): {e}")
             return False
 
 
@@ -401,6 +457,7 @@ class DragonHeaderMonitor:
         self.matcher = TemplateMatcher(template_path, confidence)
         self.capture = WindowCapture()
         self.proc_mgr = ProcessManager()
+        self._killed_pids: set[int] = set()  # 已尝试杀过的 PID，避免重复尝试
 
     # ----------------------------------------------------------
     # 单窗口检测
@@ -442,6 +499,10 @@ class DragonHeaderMonitor:
             try:
                 windows = WindowCapture.find_wow_windows()
 
+                # 清理已经不存在的 PID（进程已退出）
+                active_pids = {w['pid'] for w in windows}
+                self._killed_pids &= active_pids
+
                 if not windows:
                     now = time.monotonic()
                     if now - last_no_windows_report > 10.0:
@@ -449,16 +510,20 @@ class DragonHeaderMonitor:
                         last_no_windows_report = now
                 else:
                     for win in windows:
+                        pid = win['pid']
+                        if pid in self._killed_pids:
+                            continue  # 已经尝试杀过这个进程，跳过
                         if win['hwnd'] and win32gui.IsIconic(win['hwnd']):
                             continue
 
                         found, conf, _ = self.check_window(win)
                         if found:
                             log.info(
-                                f"龙头buff! PID={win['pid']} "
+                                f"龙头buff! PID={pid} "
                                 f"conf={conf:.3f} 窗口=\"{win['title']}\""
                             )
-                            self.proc_mgr.kill(win['pid'])
+                            self.proc_mgr.kill(pid)
+                            self._killed_pids.add(pid)  # 记录已尝试，避免重复
 
                 time.sleep(interval)
 
@@ -552,7 +617,7 @@ def capture_template_interactive() -> None:
     print(f'\n模板尺寸: {w} x {h} px')
     confirm = input(f'保存到 {TEMPLATE_PATH.name}? [Y/n]: ').strip().lower()
     if confirm in ('', 'y', 'yes'):
-        cv2.imwrite(str(TEMPLATE_PATH), template)
+        imwrite(str(TEMPLATE_PATH), template)
         log.info(f'已保存: {TEMPLATE_PATH}')
     else:
         log.info('已取消')
