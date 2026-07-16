@@ -17,6 +17,7 @@ import logging
 import sys
 import time
 import argparse
+import random
 from pathlib import Path
 from typing import Optional
 
@@ -51,6 +52,10 @@ WOW_PROCESS_NAMES: frozenset[str] = frozenset({
 
 # 检测间隔 (秒)
 CHECK_INTERVAL: float = 1.0
+
+# 自动跳跃间隔范围 (秒)
+JUMP_MIN_INTERVAL: float = 10.0
+JUMP_MAX_INTERVAL: float = 20.0
 
 # 模板匹配置信度阈值 (0-1, 越高越严格)
 CONFIDENCE_THRESHOLD: float = 0.65
@@ -456,11 +461,37 @@ class DragonHeaderMonitor:
         self,
         template_path: str,
         confidence: float = CONFIDENCE_THRESHOLD,
+        jump_enabled: bool = True,
+        jump_min: float = JUMP_MIN_INTERVAL,
+        jump_max: float = JUMP_MAX_INTERVAL,
     ):
         self.matcher = TemplateMatcher(template_path, confidence)
         self.capture = WindowCapture()
         self.proc_mgr = ProcessManager()
         self._killed_pids: set[int] = set()  # 已尝试杀过的 PID，避免重复尝试
+        self._jump_enabled = jump_enabled
+        self._jump_min = jump_min
+        self._jump_max = jump_max
+        self._last_jump_time = 0.0
+        self._next_jump_delay = random.uniform(jump_min, jump_max)
+
+    # ----------------------------------------------------------
+    # 自动跳跃 (Anti-AFK)
+    # ----------------------------------------------------------
+
+    @staticmethod
+    def _send_space(hwnd: int) -> None:
+        """发送空格键给WoW窗口（通过PostMessage，无需前台）"""
+        try:
+            # VK_SPACE = 0x20, scan code = 0x39
+            lparam_down = 1 | (0x39 << 16)  # repeat=1, scan=0x39
+            lparam_up = 1 | (0x39 << 16) | (1 << 31)  # + key up flag
+            win32gui.PostMessage(hwnd, win32con.WM_KEYDOWN, win32con.VK_SPACE, lparam_down)
+            time.sleep(0.02)
+            win32gui.PostMessage(hwnd, win32con.WM_KEYUP, win32con.VK_SPACE, lparam_up)
+            log.debug(f"跳跃 (hwnd={hwnd})")
+        except Exception as e:
+            log.debug(f"发送空格失败 hwnd={hwnd}: {e}")
 
     # ----------------------------------------------------------
     # 单窗口检测
@@ -494,6 +525,10 @@ class DragonHeaderMonitor:
         log.info(f'  模板={self.matcher.template.shape[1]}x{self.matcher.template.shape[0]}px')
         log.info(f'  进程={", ".join(sorted(WOW_PROCESS_NAMES))}')
         log.info(f'  截图=PrintWindow进程级 (失败回退前台截图)')
+        if self._jump_enabled:
+            log.info(f'  自动跳跃=开启 ({self._jump_min:.0f}~{self._jump_max:.0f}s)')
+        else:
+            log.info('  自动跳跃=关闭')
         log.info('=' * 55)
 
         last_no_windows_report = 0.0
@@ -527,6 +562,20 @@ class DragonHeaderMonitor:
                             )
                             self.proc_mgr.kill(pid)
                             self._killed_pids.add(pid)  # 记录已尝试，避免重复
+
+                # --- 自动跳跃 (Anti-AFK) ---
+                if self._jump_enabled and windows:
+                    now = time.monotonic()
+                    if now - self._last_jump_time >= self._next_jump_delay:
+                        for win in windows:
+                            pid = win['pid']
+                            if pid not in self._killed_pids:
+                                self._send_space(win['hwnd'])
+                                self._last_jump_time = now
+                                self._next_jump_delay = random.uniform(
+                                    self._jump_min, self._jump_max,
+                                )
+                                break
 
                 time.sleep(interval)
 
@@ -645,6 +694,7 @@ def main() -> int:
 使用:
   python buff_monitor.py              # 启动监控
   python buff_monitor.py --capture     # 截取模板
+  python buff_monitor.py --no-jump     # 关闭自动跳跃
   python buff_monitor.py --debug       # 调试模式
 
 测试（无需游戏）:
@@ -656,6 +706,9 @@ def main() -> int:
     parser.add_argument('--template', default=str(TEMPLATE_PATH))
     parser.add_argument('--confidence', type=float, default=CONFIDENCE_THRESHOLD)
     parser.add_argument('--interval', type=float, default=CHECK_INTERVAL)
+    parser.add_argument('--no-jump', action='store_true', help='禁用自动跳跃')
+    parser.add_argument('--jump-min', type=float, default=JUMP_MIN_INTERVAL, help='跳跃最小间隔（秒）')
+    parser.add_argument('--jump-max', type=float, default=JUMP_MAX_INTERVAL, help='跳跃最大间隔（秒）')
     parser.add_argument('--capture', action='store_true')
     parser.add_argument('--debug', action='store_true')
 
@@ -676,7 +729,12 @@ def main() -> int:
         return 1
 
     try:
-        monitor = DragonHeaderMonitor(args.template, args.confidence)
+        monitor = DragonHeaderMonitor(
+            args.template, args.confidence,
+            jump_enabled=not args.no_jump,
+            jump_min=args.jump_min,
+            jump_max=args.jump_max,
+        )
         monitor.run(args.interval)
     except Exception as e:
         log.error(f'启动失败: {e}')
