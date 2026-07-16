@@ -30,7 +30,10 @@ import win32con
 import win32ui
 import ctypes
 import subprocess
-from mss import MSS
+try:
+    from mss import mss as MSS  # mss >= 6.0
+except ImportError:
+    from mss import MSS         # mss < 6.0
 from mss.exception import ScreenShotError
 
 # ================================================================
